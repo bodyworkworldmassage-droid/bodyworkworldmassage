@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Server error.' }, { status: 500 });
+  } catch (err: any) {
+    console.error('REGISTER ERROR:', err);
+    return NextResponse.json({ error: err?.message || 'Server error.' }, { status: 500 });
   }
 }
