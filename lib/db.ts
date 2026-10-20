@@ -1,19 +1,33 @@
-import { neon } from '@neondatabase/serverless';
+import { neon, NeonQueryFunction } from '@neondatabase/serverless';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
+let _sql: NeonQueryFunction<false, false> | null = null;
+
+function getDb(): NeonQueryFunction<false, false> {
+  if (_sql) return _sql;
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL environment variable is not set');
+  // Strip parameters unsupported by the Neon HTTP driver
+  const cleanUrl = url
+    .replace(/[?&]channel_binding=[^&]*/g, '')
+    .replace(/\?&/, '?')
+    .replace(/[?&]$/, '');
+  _sql = neon(cleanUrl);
+  return _sql;
 }
 
-// Strip parameters unsupported by the Neon HTTP driver
-const dbUrl = process.env.DATABASE_URL
-  .replace(/[?&]channel_binding=[^&]*/g, '')
-  .replace(/\?&/, '?')
-  .replace(/[?&]$/, '');
-
-export const sql = neon(dbUrl);
+// Proxy so existing `sql\`...\`` calls work unchanged
+export const sql = new Proxy({} as NeonQueryFunction<false, false>, {
+  apply(_t, _this, args) {
+    return (getDb() as any)(...args);
+  },
+  get(_t, prop) {
+    return (getDb() as any)[prop];
+  },
+});
 
 export async function initDb() {
-  await sql`
+  const db = getDb();
+  await db`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       first_name TEXT NOT NULL,
@@ -37,7 +51,7 @@ export async function initDb() {
       state TEXT
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS listings (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -64,7 +78,7 @@ export async function initDb() {
       approved_at TIMESTAMPTZ
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS listing_images (
       id SERIAL PRIMARY KEY,
       listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
@@ -73,7 +87,7 @@ export async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS approval_tokens (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -84,5 +98,3 @@ export async function initDb() {
     )
   `;
 }
-
-initDb().catch(console.error);

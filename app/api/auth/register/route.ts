@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, initDb } from '@/lib/db';
 import { hashPassword, createToken, generateApprovalToken } from '@/lib/auth';
 import { sendAdminApprovalEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
+    await initDb();
     const body = await request.json();
     const {
       first_name, last_name, username, email, password, confirm_password,
