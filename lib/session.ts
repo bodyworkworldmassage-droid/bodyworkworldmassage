@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { verifyToken } from './auth';
-import db from './db';
+import { sql } from './db';
 
 export interface SessionUser {
   id: number;
@@ -30,8 +30,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     if (!token) return null;
     const userId = verifyToken(token);
     if (!userId) return null;
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as SessionUser | undefined;
-    return user || null;
+    const rows = await sql`SELECT * FROM users WHERE id = ${userId}`;
+    return (rows[0] as SessionUser) || null;
   } catch {
     return null;
   }

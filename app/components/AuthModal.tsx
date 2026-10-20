@@ -11,7 +11,7 @@ type View = 'login' | 'register';
 type RegisterTab = 'default' | 'provider';
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { login } = useAuth();
+  const { login, refresh } = useAuth();
   const [view, setView] = useState<View>('login');
   const [registerTab, setRegisterTab] = useState<RegisterTab>('default');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +28,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   // Register form state
   const [reg, setReg] = useState({
     first_name: '', last_name: '', username: '', email: '', password: '', confirm_password: '',
-    phone: '', date_of_birth: '', instagram_url: '', website: '', bio: '',
+    phone: '', date_of_birth: '', instagram_url: '', website: '', bio: '', state: '',
     terms_accepted: false, gdpr_accepted: false,
   });
 
@@ -75,8 +75,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(false);
     if (!res.ok) {
       setRegisterError(data.error || 'Registration failed.');
+    } else if (data.pending) {
+      // Provider — awaiting admin approval, show message and stay on modal
+      setRegisterSuccess(
+        '✅ Registration submitted! Your provider account is pending admin approval. You will receive an email once your account is approved.'
+      );
     } else {
-      setRegisterSuccess(data.message || 'Registration submitted!');
+      // Default user — auto-approved, log in and redirect
+      await refresh();
+      onClose();
+      window.location.href = '/account';
     }
   };
 
@@ -189,6 +197,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   {registerTab === 'provider' && (
                     <>
                       <input placeholder="Phone" value={reg.phone} onChange={e => setReg(r => ({ ...r, phone: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <select value={reg.state} onChange={e => setReg(r => ({ ...r, state: e.target.value }))} required className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#1c1a16]">
+                        <option value="">Select State (required)</option>
+                        {['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
                       <input type="date" placeholder="Date of Birth" value={reg.date_of_birth} onChange={e => setReg(r => ({ ...r, date_of_birth: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                       <input placeholder="Instagram URL" value={reg.instagram_url} onChange={e => setReg(r => ({ ...r, instagram_url: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                       <input placeholder="Website" value={reg.website} onChange={e => setReg(r => ({ ...r, website: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />

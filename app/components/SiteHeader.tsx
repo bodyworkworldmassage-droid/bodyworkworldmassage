@@ -12,18 +12,18 @@ export default function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-10 border-b border-black/10 bg-brand-cream/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <a href="/" className="flex items-center">
             <Image
               src="/logo.png"
               alt="BodyWorkWorldMassage"
               width={504}
               height={495}
-              className="h-14 w-auto max-w-[260px] object-contain"
+              className="h-28 w-auto max-w-[380px] object-contain"
               priority
             />
           </a>
-          <nav className="hidden gap-8 text-base text-[#3a352c] lg:flex">
+          <nav className="hidden gap-8 text-lg text-[#3a352c] lg:flex">
             <a href="/" className="hover:text-brand-green">Home</a>
             <a href="/#about" className="hover:text-brand-green">About</a>
             <a href="/#services" className="hover:text-brand-green">Service</a>
@@ -57,16 +57,17 @@ export default function SiteHeader() {
               <button
                 onClick={() => setModalOpen(true)}
                 aria-label="Account"
-                className="hidden h-9 w-9 items-center justify-center rounded-full border border-black/15 text-[#3a352c] sm:flex hover:border-[#1a3a2a]"
+                className="hidden items-center gap-2 rounded-full border border-black/15 px-5 py-3 text-[#3a352c] sm:flex hover:border-[#1a3a2a] hover:text-[#1a3a2a] transition-colors"
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 flex-shrink-0">
                   <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.8-3.6-5-8-5z" />
                 </svg>
+                <span className="font-jost text-base font-medium">Create a new profile</span>
               </button>
             )}
             <a
               href="/#contact"
-              className="font-marcellus rounded-full bg-brand-green px-5 py-2.5 text-sm tracking-wide text-brand-cream transition-colors hover:bg-brand-green-dark"
+              className="font-marcellus rounded-full bg-brand-green px-7 py-3 text-base tracking-wide text-brand-cream transition-colors hover:bg-brand-green-dark"
             >
               Book Appointment
             </a>

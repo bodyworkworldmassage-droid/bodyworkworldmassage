@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { sql } from '@/lib/db';
 import crypto from 'crypto';
 import { sendUserApprovedEmail } from '@/lib/email';
 
@@ -12,19 +12,22 @@ export async function GET(request: NextRequest) {
     }
 
     const hash = crypto.createHash('sha256').update(token).digest('hex');
-    const tokenRow = db.prepare(`
+    const tokenRows = await sql`
       SELECT * FROM approval_tokens
-      WHERE token_hash = ? AND used_at IS NULL AND expires_at > datetime('now')
-    `).get(hash) as { id: number; user_id: number } | undefined;
+      WHERE token_hash = ${hash} AND used_at IS NULL AND expires_at > NOW()
+    `;
+    const tokenRow = tokenRows[0] as { id: number; user_id: number } | undefined;
 
     if (!tokenRow) {
       return new NextResponse('<html><body><h2>Invalid or expired link.</h2></body></html>', { status: 400, headers: { 'Content-Type': 'text/html' } });
     }
 
-    db.prepare("UPDATE users SET account_status = 'approved', approved_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(tokenRow.user_id);
-    db.prepare("UPDATE approval_tokens SET used_at = datetime('now') WHERE id = ?").run(tokenRow.id);
+    await sql`UPDATE users SET account_status = 'approved', approved_at = NOW(), updated_at = NOW() WHERE id = ${tokenRow.user_id}`;
+    await sql`UPDATE approval_tokens SET used_at = NOW() WHERE id = ${tokenRow.id}`;
 
-    const user = db.prepare('SELECT id, first_name, last_name, email, username FROM users WHERE id = ?').get(tokenRow.user_id) as { id: number; first_name: string; last_name: string; email: string; username: string };
+    const userRows = await sql`SELECT id, first_name, last_name, email, username FROM users WHERE id = ${tokenRow.user_id}`;
+    const user = userRows[0] as { id: number; first_name: string; last_name: string; email: string; username: string };
+
     try {
       await sendUserApprovedEmail(user);
     } catch (e) {

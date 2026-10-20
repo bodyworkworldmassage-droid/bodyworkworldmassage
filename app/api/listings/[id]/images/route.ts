@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import db from '@/lib/db';
+import { sql } from '@/lib/db';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +12,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!sessionUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const listing = db.prepare('SELECT user_id FROM listings WHERE id=?').get(id) as { user_id: number } | undefined;
+    const rows = await sql`SELECT user_id FROM listings WHERE id=${id}`;
+    const listing = rows[0] as { user_id: number } | undefined;
     if (!listing || listing.user_id !== sessionUser.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const buffer = Buffer.from(await file.arrayBuffer());
       await writeFile(path.join(uploadDir, filename), buffer);
       const imageUrl = `/uploads/listings/${id}/${filename}`;
-      db.prepare('INSERT INTO listing_images (listing_id, image_url) VALUES (?,?)').run(id, imageUrl);
+      await sql`INSERT INTO listing_images (listing_id, image_url) VALUES (${id}, ${imageUrl})`;
       urls.push(imageUrl);
     }
 

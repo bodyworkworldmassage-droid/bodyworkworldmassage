@@ -9,37 +9,39 @@ export async function GET() {
     from: process.env.SMTP_FROM,
     adminEmail: process.env.ADMIN_EMAIL,
     hasPass: !!process.env.SMTP_PASS,
+    passLength: process.env.SMTP_PASS?.length,
   };
 
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      tls: { rejectUnauthorized: false },
     });
 
     await transporter.verify();
 
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM,
+    const info = await transporter.sendMail({
+      from: `"BodyWorkWorld Massage" <${process.env.SMTP_FROM}>`,
       to: process.env.ADMIN_EMAIL,
       subject: 'Test Email - BodyWorkWorldMassage',
-      html: '<p>This is a test email. If you received this, email sending is working correctly!</p>',
+      html: '<p>✅ Brevo SMTP is working correctly! Email sending is configured.</p>',
     });
 
-    return NextResponse.json({ success: true, message: 'Test email sent!', config });
+    return NextResponse.json({ success: true, message: 'Test email sent!', messageId: info.messageId, config });
   } catch (err: unknown) {
-    const error = err as Error & { code?: string; command?: string };
+    const error = err as Error & { code?: string; command?: string; response?: string; responseCode?: number };
     return NextResponse.json({
       success: false,
       error: error.message,
       code: error.code,
       command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
       config,
     }, { status: 500 });
   }

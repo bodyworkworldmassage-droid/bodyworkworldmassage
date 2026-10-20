@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
-import db from '@/lib/db';
+import { sql } from '@/lib/db';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     await writeFile(path.join(uploadDir, filename), buffer);
 
     const imageUrl = `/uploads/profiles/${filename}`;
-    db.prepare("UPDATE users SET profile_image=?, updated_at=datetime('now') WHERE id=?").run(imageUrl, sessionUser.id);
+    await sql`UPDATE users SET profile_image=${imageUrl}, updated_at=NOW() WHERE id=${sessionUser.id}`;
 
     return NextResponse.json({ image_url: imageUrl });
   } catch (err) {

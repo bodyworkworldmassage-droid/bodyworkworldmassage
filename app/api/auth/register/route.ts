@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db';
-import { hashPassword, generateApprovalToken } from '@/lib/auth';
+import { sql } from '@/lib/db';
+import { hashPassword, createToken, generateApprovalToken } from '@/lib/auth';
 import { sendAdminApprovalEmail } from '@/lib/email';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
       first_name, last_name, username, email, password, confirm_password,
       phone, date_of_birth, instagram_url, website,
-      account_type, terms_accepted, gdpr_accepted,
+      account_type, terms_accepted, gdpr_accepted, state,
     } = body;
 
     if (!first_name || !last_name || !username || !email || !password || !confirm_password) {
@@ -24,38 +25,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You must accept the terms.' }, { status: 400 });
     }
 
-    const existing = db.prepare('SELECT id FROM users WHERE email = ? OR username = ?').get(email, username);
-    if (existing) {
+    const existing = await sql`SELECT id FROM users WHERE email = ${email} OR username = ${username}`;
+    if (existing.length > 0) {
       return NextResponse.json({ error: 'Email or username already in use.' }, { status: 409 });
     }
 
     const password_hash = await hashPassword(password);
-    const result = db.prepare(`
-      INSERT INTO users (first_name, last_name, username, email, password_hash, phone, date_of_birth, instagram_url, website, account_type, terms_accepted, gdpr_accepted)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      first_name, last_name, username, email, password_hash,
-      phone || null, date_of_birth || null, instagram_url || null, website || null,
-      account_type || 'default', terms_accepted ? 1 : 0, gdpr_accepted ? 1 : 0
-    );
+    const isProvider = account_type === 'provider';
 
-    const userId = result.lastInsertRowid as number;
-    const { token, hash } = generateApprovalToken();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    db.prepare('INSERT INTO approval_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)').run(userId, hash, expiresAt);
+    // Providers go pending for admin approval; default users auto-approve
+    const accountStatus = isProvider ? 'pending' : 'approved';
 
-    const user = db.prepare('SELECT id, first_name, last_name, email, username FROM users WHERE id = ?').get(userId) as { id: number; first_name: string; last_name: string; email: string; username: string };
+    const rows = await sql`
+      INSERT INTO users (first_name, last_name, username, email, password_hash, phone, date_of_birth, instagram_url, website, account_type, account_status, terms_accepted, gdpr_accepted, state)
+      VALUES (${first_name}, ${last_name}, ${username}, ${email}, ${password_hash},
+              ${phone || null}, ${date_of_birth || null}, ${instagram_url || null}, ${website || null},
+              ${account_type || 'default'}, ${accountStatus}, ${terms_accepted ? 1 : 0}, ${gdpr_accepted ? 1 : 0}, ${state || null})
+      RETURNING id
+    `;
 
-    try {
-      await sendAdminApprovalEmail(user, token);
-    } catch (emailErr) {
-      console.error('Failed to send admin email:', emailErr);
+    const userId = rows[0].id as number;
+
+    if (isProvider) {
+      // Generate approval token valid for 7 days
+      const { token, hash } = generateApprovalToken();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      await sql`
+        INSERT INTO approval_tokens (user_id, token_hash, expires_at)
+        VALUES (${userId}, ${hash}, ${expiresAt})
+      `;
+
+      try {
+        await sendAdminApprovalEmail(
+          { id: userId, first_name, last_name, email, username },
+          token
+        );
+      } catch (e) {
+        console.error('Failed to send admin approval email:', e);
+      }
+
+      return NextResponse.json({
+        success: true,
+        pending: true,
+        message: 'Registration successful! Your account is pending admin approval. You will receive an email once approved.',
+      });
     }
 
-    return NextResponse.json({
+    // Default users: auto-approve and log in immediately
+    const sessionToken = createToken(userId);
+    const response = NextResponse.json({
       success: true,
-      message: 'Your account is in progress. Your registration has been submitted successfully and is currently waiting for admin approval.',
+      pending: false,
+      message: 'Registration successful! You are now logged in.',
     });
+
+    response.cookies.set('session', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
+    return response;
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error.' }, { status: 500 });
