@@ -14,8 +14,8 @@ function getDb() {
   return _sql;
 }
 
-export function sql(strings: TemplateStringsArray, ...values: unknown[]) {
-  return getDb()(strings, ...values);
+export function sql(strings: TemplateStringsArray, ...values: unknown[]): Promise<any[]> {
+  return getDb()(strings, ...values) as Promise<any[]>;
 }
 
 export async function initDb() {
