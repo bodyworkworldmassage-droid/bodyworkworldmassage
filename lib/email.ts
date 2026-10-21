@@ -1,17 +1,3 @@
-import nodemailer from 'nodemailer';
-
-function getTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
-
 export interface UserEmailData {
   id: number;
   first_name: string;
@@ -20,17 +6,42 @@ export interface UserEmailData {
   username: string;
 }
 
+async function sendBrevoEmail(to: string, subject: string, html: string): Promise<void> {
+  const apiKey = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.SMTP_FROM || 'bodyworkworldmassage@gmail.com';
+
+  if (!apiKey) throw new Error('BREVO_API_KEY environment variable is not set');
+
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'content-type': 'application/json',
+      'api-key': apiKey,
+    },
+    body: JSON.stringify({
+      sender: { name: 'BodyWorkWorld Massage', email: fromEmail },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Brevo API error ${res.status}: ${err}`);
+  }
+}
+
 export async function sendAdminApprovalEmail(user: UserEmailData, approvalToken: string): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   const approveUrl = `${baseUrl}/api/auth/approve?token=${approvalToken}`;
   const adminEmail = process.env.ADMIN_EMAIL || 'bodyworkworldmassage@gmail.com';
 
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: `"BodyWorkWorld Massage" <${process.env.SMTP_FROM}>`,
-    to: adminEmail,
-    subject: `New Provider Registration: ${user.first_name} ${user.last_name}`,
-    html: `
+  await sendBrevoEmail(
+    adminEmail,
+    `New Provider Registration: ${user.first_name} ${user.last_name}`,
+    `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
         <h2 style="color: #1a3a2a;">New Provider Awaiting Approval</h2>
         <p>A new provider has registered and is awaiting your approval:</p>
@@ -46,18 +57,17 @@ export async function sendAdminApprovalEmail(user: UserEmailData, approvalToken:
         </p>
         <p style="margin-top:16px;font-size:12px;color:#888">This approval link expires in 7 days.</p>
       </div>
-    `,
-  });
+    `
+  );
 }
 
 export async function sendUserApprovedEmail(user: UserEmailData): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: `"BodyWorkWorld Massage" <${process.env.SMTP_FROM}>`,
-    to: user.email,
-    subject: 'Your BodyWorkWorldMassage account has been approved!',
-    html: `
+
+  await sendBrevoEmail(
+    user.email,
+    'Your BodyWorkWorldMassage account has been approved!',
+    `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
         <h2 style="color: #1a3a2a;">Welcome, ${user.first_name}!</h2>
         <p>Great news — your provider account on <strong>BodyWorkWorldMassage</strong> has been approved.</p>
@@ -68,6 +78,6 @@ export async function sendUserApprovedEmail(user: UserEmailData): Promise<void> 
           </a>
         </p>
       </div>
-    `,
-  });
+    `
+  );
 }

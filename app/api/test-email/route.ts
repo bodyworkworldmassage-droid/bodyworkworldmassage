@@ -1,48 +1,38 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
 
 export async function GET() {
-  const config = {
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    user: process.env.SMTP_USER,
-    from: process.env.SMTP_FROM,
-    adminEmail: process.env.ADMIN_EMAIL,
-    hasPass: !!process.env.SMTP_PASS,
-    passLength: process.env.SMTP_PASS?.length,
-  };
-
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+    const apiKey = process.env.BREVO_API_KEY;
+    const fromEmail = process.env.SMTP_FROM || 'bodyworkworldmassage@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'bodyworkworldmassage@gmail.com';
+
+    if (!apiKey) {
+      return NextResponse.json({ success: false, error: 'BREVO_API_KEY not set' });
+    }
+
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'api-key': apiKey,
       },
+      body: JSON.stringify({
+        sender: { name: 'BodyWorkWorld Massage', email: fromEmail },
+        to: [{ email: adminEmail }],
+        subject: 'Test Email from BodyWorkWorld',
+        htmlContent: '<p>This is a test email. Email sending is working correctly!</p>',
+      }),
     });
 
-    await transporter.verify();
+    const body = await res.text();
 
-    const info = await transporter.sendMail({
-      from: `"BodyWorkWorld Massage" <${process.env.SMTP_FROM}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject: 'Test Email - BodyWorkWorldMassage',
-      html: '<p>✅ Brevo SMTP is working correctly! Email sending is configured.</p>',
-    });
+    if (!res.ok) {
+      return NextResponse.json({ success: false, status: res.status, error: body });
+    }
 
-    return NextResponse.json({ success: true, message: 'Test email sent!', messageId: info.messageId, config });
-  } catch (err: unknown) {
-    const error = err as Error & { code?: string; command?: string; response?: string; responseCode?: number };
-    return NextResponse.json({
-      success: false,
-      error: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      config,
-    }, { status: 500 });
+    return NextResponse.json({ success: true, status: res.status, response: body });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message });
   }
 }
