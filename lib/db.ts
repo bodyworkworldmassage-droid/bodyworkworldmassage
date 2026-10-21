@@ -1,12 +1,11 @@
-import { neon, NeonQueryFunction } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 
-let _sql: NeonQueryFunction<false, false> | null = null;
+let _sql: ReturnType<typeof neon> | null = null;
 
-function getDb(): NeonQueryFunction<false, false> {
+function getDb() {
   if (_sql) return _sql;
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL environment variable is not set');
-  // Strip parameters unsupported by the Neon HTTP driver
   const cleanUrl = url
     .replace(/[?&]channel_binding=[^&]*/g, '')
     .replace(/\?&/, '?')
@@ -15,15 +14,9 @@ function getDb(): NeonQueryFunction<false, false> {
   return _sql;
 }
 
-// Proxy so existing `sql\`...\`` calls work unchanged
-export const sql = new Proxy({} as NeonQueryFunction<false, false>, {
-  apply(_t, _this, args) {
-    return (getDb() as any)(...args);
-  },
-  get(_t, prop) {
-    return (getDb() as any)[prop];
-  },
-});
+export function sql(strings: TemplateStringsArray, ...values: unknown[]) {
+  return getDb()(strings, ...values);
+}
 
 export async function initDb() {
   const db = getDb();
