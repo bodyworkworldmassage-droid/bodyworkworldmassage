@@ -86,7 +86,7 @@ const STEPS = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-brand-cream font-jost text-[#1c1a16]">
-      <div className="bg-brand-green px-6 py-2.5 text-sm text-brand-cream">
+      <div className="bg-brand-green px-4 py-2 text-sm text-brand-cream sm:px-6 sm:py-2.5">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
           <span>Massage &amp; bodywork professionals in all 50 states</span>
           <div className="flex items-center gap-2">
@@ -115,15 +115,15 @@ export default function Home() {
       <SiteHeader />
 
       <main className="flex-1">
-        <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-6 py-20 sm:py-28 lg:grid-cols-2">
+        <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-12 sm:px-6 sm:py-20 lg:gap-14 lg:grid-cols-2 lg:py-28">
           <div>
             <span className="font-marcellus inline-block rounded-full bg-brand-gold px-4 py-1.5 text-sm tracking-wide text-brand-gold-text">
               Nationwide wellness directory
             </span>
-            <h1 className="font-jost mt-6 text-[74px] font-semibold leading-[1.15] tracking-tight text-brand-green">
+            <h1 className="font-jost mt-6 text-[40px] font-semibold leading-[1.15] tracking-tight text-brand-green sm:text-[56px] lg:text-[74px]">
               Find Massage &amp; Bodywork Near You
             </h1>
-            <p className="font-jost mt-5 text-[28px] font-medium text-brand-rust">
+            <p className="font-jost mt-5 text-[20px] font-medium text-brand-rust sm:text-[28px]">
               Find. Connect. Heal.
             </p>
             <p className="font-jost mt-5 max-w-lg text-[18px] leading-7 text-[#3a352c]">
@@ -156,7 +156,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="about" className="bg-brand-cream py-[50px]">
+        <section id="about" className="bg-brand-cream py-8 sm:py-[50px]">
           <div className="mx-auto max-w-6xl px-6">
             <div className="relative">
               <div className="relative z-10 rounded-2xl bg-brand-green px-6 py-8 shadow-xl sm:mx-6 sm:px-10 sm:py-10">
@@ -181,7 +181,7 @@ export default function Home() {
                     <p className="font-jost text-sm font-semibold uppercase tracking-wide text-brand-rust">
                       About us
                     </p>
-                    <h2 className="font-jost mt-3 text-4xl font-semibold leading-tight tracking-tight text-brand-green sm:text-5xl">
+                    <h2 className="font-jost mt-3 text-3xl font-semibold leading-tight tracking-tight text-brand-green sm:text-4xl lg:text-5xl">
                       A simpler way to find the right hands
                     </h2>
                     <p className="font-jost mt-5 text-[16px] leading-7 text-[#3a352c]">
@@ -199,7 +199,7 @@ export default function Home() {
                       keep the directory clean and easy to search so the work
                       speaks for itself.
                     </p>
-                    <div className="mt-8 grid grid-cols-3 gap-6">
+                    <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
                       {ABOUT_FEATURES.map((feature) => (
                         <div
                           key={feature.title}
@@ -227,7 +227,7 @@ export default function Home() {
               <p className="font-jost text-sm font-semibold text-brand-rust">
                 How it works
               </p>
-              <h2 className="font-jost mx-auto mt-3 max-w-3xl text-5xl font-semibold leading-tight tracking-tight text-brand-green sm:text-6xl">
+              <h2 className="font-jost mx-auto mt-3 max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-brand-green sm:text-5xl lg:text-6xl">
                 Three steps to the right professional
               </h2>
             </div>
@@ -254,12 +254,12 @@ export default function Home() {
 
         <section className="bg-brand-cream py-16">
           <div className="mx-auto max-w-6xl px-6">
-            <div className="grid grid-cols-1 items-center gap-14 rounded-t-none rounded-b-[2.5rem] bg-[#0E3A29] px-10 py-16 text-brand-cream sm:px-16 sm:py-20 lg:grid-cols-2">
+            <div className="grid grid-cols-1 items-center gap-10 rounded-b-[2.5rem] bg-[#0E3A29] px-5 py-10 text-brand-cream sm:px-10 sm:py-16 lg:gap-14 lg:grid-cols-2 lg:px-16 lg:py-20">
               <div>
                 <p className="font-jost text-base font-semibold text-brand-cream/90">
                   Travel schedules
                 </p>
-                <h2 className="font-jost mt-4 text-5xl font-bold leading-[1.1] text-white sm:text-6xl">
+                <h2 className="font-jost mt-4 text-3xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
                   Available where you&apos;re headed
                 </h2>
                 <p className="font-jost mt-6 max-w-lg text-[17px] leading-7 text-white">
@@ -300,7 +300,7 @@ export default function Home() {
                 <p className="font-jost text-sm font-semibold text-brand-rust">
                   Services
                 </p>
-                <h2 className="font-jost mt-3 max-w-md text-4xl font-bold leading-tight text-brand-green sm:text-5xl">
+                <h2 className="font-jost mt-3 max-w-md text-3xl font-bold leading-tight text-brand-green sm:text-4xl lg:text-5xl">
                   A simpler way to find the right hands
                 </h2>
               </div>
@@ -350,17 +350,17 @@ export default function Home() {
 
         <section className="bg-brand-cream py-16">
           <div className="mx-auto max-w-7xl px-6">
-            <div className="rounded-t-[2.5rem] bg-brand-panel px-10 py-16 sm:px-16">
+            <div className="rounded-t-[2.5rem] bg-brand-panel px-5 py-10 sm:px-10 sm:py-16 lg:px-16">
             <div className="flex justify-center">
               <OvalCarousel />
             </div>
 
-            <div className="mt-48 grid grid-cols-1 items-start gap-20 lg:grid-cols-2">
+            <div className="mt-12 grid grid-cols-1 items-start gap-10 sm:mt-32 lg:mt-48 lg:grid-cols-2 lg:gap-20">
               <div>
                 <p className="font-jost text-sm font-semibold text-brand-rust">
                   For providers
                 </p>
-                <h2 className="font-jost mt-3 text-4xl font-bold leading-[1.15] text-brand-green sm:text-5xl">
+                <h2 className="font-jost mt-3 text-3xl font-bold leading-[1.15] text-brand-green sm:text-4xl lg:text-5xl">
                   Your Skills. More Locations. More Opportunities.
                 </h2>
                 <p className="font-jost mt-6 max-w-lg text-[17px] leading-7 text-[#3a352c]">
@@ -401,9 +401,9 @@ export default function Home() {
             </div>
 
             <div id="faq" className="overflow-hidden">
-              <div className="flex flex-col gap-6 bg-brand-green px-10 py-10 text-brand-cream sm:flex-row sm:items-center sm:justify-between sm:px-16">
+              <div className="flex flex-col gap-6 bg-brand-green px-5 py-8 text-brand-cream sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
                 <div>
-                  <h2 className="font-jost text-3xl font-bold leading-tight text-white sm:text-4xl">
+                  <h2 className="font-jost text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
                     Ready to find the right professional?
                   </h2>
                   <p className="font-jost mt-3 text-white/80">
@@ -426,7 +426,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-14 bg-brand-panel px-10 py-16 sm:px-16 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-10 bg-brand-panel px-5 py-10 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-14 lg:px-16">
                 <div>
                   <p className="font-jost text-sm font-semibold text-brand-rust">
                     Our mission
@@ -454,7 +454,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div id="contact" className="grid grid-cols-1 gap-14 rounded-b-[2.5rem] bg-white px-10 py-16 sm:px-16 lg:grid-cols-2">
+            <div id="contact" className="grid grid-cols-1 gap-10 rounded-b-[2.5rem] bg-white px-5 py-10 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-14 lg:px-16">
               <div>
                 <p className="font-jost text-sm font-semibold text-brand-rust">
                   Contact
